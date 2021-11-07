@@ -1,13 +1,14 @@
+using IdentityPoc.Data;
+using IdentityPoc.Data.Entities;
+using IdentityPoc.Features.Extensions;
+using IdentityPoc.Web.Filters;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace IdentityPoc.Web
 {
@@ -23,6 +24,19 @@ namespace IdentityPoc.Web
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddDbContext<DataDbContext>();
+
+			services.AddFeatures();
+
+			services.AddLogging();
+			services.AddSwaggerGen();
+
+			services.AddIdentity<PersonUser, IdentityRole<Guid>>()
+				.AddEntityFrameworkStores<DataDbContext>();
+
+			// TODO: Nicer way?
+			services.AddScoped<ApiExceptionFilterAttribute>();
+
 			services.AddControllersWithViews();
 		}
 
@@ -42,8 +56,16 @@ namespace IdentityPoc.Web
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 
+			app.UseSwagger();
+			app.UseSwaggerUI(options =>
+			{
+				options.SwaggerEndpoint("/swagger/v1/swagger.json", "Timeline api v1");
+				options.RoutePrefix = string.Empty;
+			});
+
 			app.UseRouting();
 
+			app.UseAuthentication();
 			app.UseAuthorization();
 
 			app.UseEndpoints(endpoints =>
