@@ -58,18 +58,12 @@ namespace IdentityPoc.Features.Users
 
 			public async Task<Result> HandleAsync(Command command)
 			{
-				var tokenBytes = Convert.FromBase64String(command.InviteToken);
-				var token = Encoding.UTF8.GetString(tokenBytes);
-
-				if (!Guid.TryParse(token, out var invitationId))
-				{
-					throw new InvalidOperationException("Invalid invitation token provided");
-				}
+				var invitationId = TokenHelper.TokenToGuid(command.InviteToken);
 
 				var invitation = _dataDbContext.PersonInvitations.Find(invitationId);
 				if (invitation == null || invitation.Expires <= DateTime.UtcNow)
 				{
-					throw new InvalidOperationException("No activate invitation could be found");
+					throw new InvalidOperationException($"No activate invitation found for token '{command.InviteToken}'");
 				}
 
 				var identityUser = new PersonUser()
