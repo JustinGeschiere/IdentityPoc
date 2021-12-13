@@ -1,8 +1,8 @@
 ﻿using IdentityPoc.Features.Users;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using IdentityPoc.Web.Extensions;
 using IdentityPoc.Web.Filters;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace IdentityPoc.Web.Controllers.Api
 {
@@ -11,8 +11,20 @@ namespace IdentityPoc.Web.Controllers.Api
 	[ServiceFilter(typeof(ApiExceptionFilterAttribute))]
 	public class UsersController : ControllerBase
 	{
-		[HttpPost("CreateUser")]
-		public async Task<IActionResult> CreateUserAsync([FromServices] CreateUserFeatureAsync feature, [FromForm] CreateUserFeatureAsync.Command command)
+		[HttpGet("GetPagedUsers")]
+		public async Task<IActionResult> GetPagedUsersAsync([FromServices] GetPagedUsersFeatureAsync feature, [FromQuery] GetPagedUsersFeatureAsync.Command command)
+		{
+			return await feature.ResolveAsync(command);
+		}
+
+		[HttpPost("InviteUser")]
+		public async Task<IActionResult> InviteUserAsync([FromServices] InviteUserFeatureAsync feature, [FromForm] InviteUserFeatureAsync.Command command)
+		{
+			return await feature.ResolveAsync(command);
+		}
+
+		[HttpPost("AcceptUserInvite")]
+		public async Task<IActionResult> AcceptUserInviteAsync([FromServices] AcceptUserInviteFeatureAsync feature, [FromForm] AcceptUserInviteFeatureAsync.Command command)
 		{
 			return await feature.ResolveAsync(command);
 		}

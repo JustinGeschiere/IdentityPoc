@@ -19,6 +19,8 @@ namespace IdentityPoc.Features.Users
 
 		public class Command
 		{
+			public Guid MembershipId { get; set; }
+
 			[EmailAddress, Required]
 			public string EmailAddress { get; set; }
 		}
@@ -45,41 +47,46 @@ namespace IdentityPoc.Features.Users
 		public class Handler : IHandlerAsync<Command, Result>
 		{
 			private readonly DataDbContext _dataDbContext;
-			private readonly UserManager<PersonUser> _userManager;
 
-			public Handler(DataDbContext dataDbContext, UserManager<PersonUser> userManager)
+			public Handler(DataDbContext dataDbContext)
 			{
 				_dataDbContext = dataDbContext;
-				_userManager = userManager;
 			}
 
 			public async Task<Result> HandleAsync(Command command)
 			{
-				var existingUser = await _userManager.FindByEmailAsync(command.EmailAddress);
+				Guid? membershipId = null;
 
-				if (existingUser != null)
+				// If MembershipId is provided, it should point to an existing OrganizationMembership entity
+				if (command.MembershipId != Guid.Empty)
 				{
-					throw new InvalidOperationException($"E-mail address '{command.EmailAddress}' is already in use");
+					var membership = await _dataDbContext.OrganizationMemberships.FindAsync(command.MembershipId);
+
+					if (membership == null)
+					{
+						throw new ArgumentException($"No membership was found for the provided '{nameof(command.MembershipId)}' value");
+					}
+
+					membershipId = command.MembershipId;
 				}
 
-				var invitation = new PersonInvitation()
+				var invitation = new UserInvitation()
 				{
 					Id = Guid.NewGuid(),
 					EmailAddress = command.EmailAddress,
+					OrganizationMembershipId = membershipId,
 					Expires = DateTime.UtcNow.AddDays(7)
 				};
 
-				_dataDbContext.PersonInvitations.Add(invitation);
+				_dataDbContext.UserInvitations.Add(invitation);
 				await _dataDbContext.SaveChangesAsync();
 
 				// TODO: Send email with token url
 				var token = TokenHelper.GuidToToken(invitation.Id);
 
-				// TODO: Define flow, should person be creatable and then claimable by token (then create user for it?)
-
 				return new Result()
 				{
-					InvitationUrl = $"https://baseurl.nl/{token}",
+					InvitationUrl = $"https://localhost:5001/api/users/invitation/{token}",
 					Expires = invitation.Expires
 				};
 			}

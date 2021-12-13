@@ -12,7 +12,7 @@ namespace IdentityPoc.Web.Controllers.Api
 	public class HealthController : ControllerBase
 	{
 		[HttpGet("Status")]
-		public async Task<IActionResult> GetStatus()
+		public async Task<IActionResult> GetStatusAsync()
 		{
 			dynamic result = new
 			{

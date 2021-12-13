@@ -1,5 +1,4 @@
 ﻿using IdentityPoc.Data.Entities;
-using IdentityPoc.Data.Seeders;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +6,11 @@ using System;
 
 namespace IdentityPoc.Data
 {
-	public class DataDbContext : IdentityDbContext<PersonUser, IdentityRole<Guid>, Guid>
+	public class DataDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 	{
-		public DbSet<Person> Persons { get; set; }
 		public DbSet<Organization> Organizations { get; set; }
 		public DbSet<OrganizationMembership> OrganizationMemberships { get; set; }
-		public DbSet<PersonInvitation> PersonInvitations { get; set; }
+		public DbSet<UserInvitation> UserInvitations { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -23,19 +21,14 @@ namespace IdentityPoc.Data
 		{
 			base.OnModelCreating(modelBuilder);
 
-			// Person <-> PersonUser
-			modelBuilder.Entity<PersonUser>()
-				.HasOne(i => i.Person)
+			// User <->> OrganizationMembership
+			modelBuilder.Entity<User>()
+				.HasMany(i => i.Memberships)
 				.WithOne(i => i.User);
-
-			// Person <->> OrganizationMembership
-			modelBuilder.Entity<Person>()
-				.HasMany(i => i.OrganizationMemberships)
-				.WithOne(i => i.Person);
 
 			// Organization <->> OrganizationMembership
 			modelBuilder.Entity<Organization>()
-				.HasMany(i => i.OrganizationMemberships)
+				.HasMany(i => i.Memberships)
 				.WithOne(i => i.Organization);
 		}
 	}

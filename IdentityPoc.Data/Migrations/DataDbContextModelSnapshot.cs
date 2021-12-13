@@ -50,74 +50,38 @@ namespace IdentityPoc.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<DateTime?>("Modified")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PersonId")
+                    b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("OrganizationMemberships");
-                });
-
-            modelBuilder.Entity("IdentityPoc.Data.Entities.Person", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Modified")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Persons");
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OrganizationMemberships");
                 });
 
-            modelBuilder.Entity("IdentityPoc.Data.Entities.PersonInvitation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("EmailAddress")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Expires")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PersonInvitations");
-                });
-
-            modelBuilder.Entity("IdentityPoc.Data.Entities.PersonUser", b =>
+            modelBuilder.Entity("IdentityPoc.Data.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,9 +118,6 @@ namespace IdentityPoc.Data.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PersonId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -183,10 +144,28 @@ namespace IdentityPoc.Data.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.HasIndex("PersonId")
-                        .IsUnique();
-
                     b.ToTable("AspNetUsers");
+                });
+
+            modelBuilder.Entity("IdentityPoc.Data.Entities.UserInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("OrganizationMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserInvitations");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -321,31 +300,16 @@ namespace IdentityPoc.Data.Migrations
             modelBuilder.Entity("IdentityPoc.Data.Entities.OrganizationMembership", b =>
                 {
                     b.HasOne("IdentityPoc.Data.Entities.Organization", "Organization")
-                        .WithMany("OrganizationMemberships")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Memberships")
+                        .HasForeignKey("OrganizationId");
 
-                    b.HasOne("IdentityPoc.Data.Entities.Person", "Person")
-                        .WithMany("OrganizationMemberships")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("IdentityPoc.Data.Entities.User", "User")
+                        .WithMany("Memberships")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Organization");
 
-                    b.Navigation("Person");
-                });
-
-            modelBuilder.Entity("IdentityPoc.Data.Entities.PersonUser", b =>
-                {
-                    b.HasOne("IdentityPoc.Data.Entities.Person", "Person")
-                        .WithOne("User")
-                        .HasForeignKey("IdentityPoc.Data.Entities.PersonUser", "PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Person");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -359,7 +323,7 @@ namespace IdentityPoc.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("IdentityPoc.Data.Entities.PersonUser", null)
+                    b.HasOne("IdentityPoc.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -368,7 +332,7 @@ namespace IdentityPoc.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("IdentityPoc.Data.Entities.PersonUser", null)
+                    b.HasOne("IdentityPoc.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -383,7 +347,7 @@ namespace IdentityPoc.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("IdentityPoc.Data.Entities.PersonUser", null)
+                    b.HasOne("IdentityPoc.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -392,7 +356,7 @@ namespace IdentityPoc.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("IdentityPoc.Data.Entities.PersonUser", null)
+                    b.HasOne("IdentityPoc.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -401,14 +365,12 @@ namespace IdentityPoc.Data.Migrations
 
             modelBuilder.Entity("IdentityPoc.Data.Entities.Organization", b =>
                 {
-                    b.Navigation("OrganizationMemberships");
+                    b.Navigation("Memberships");
                 });
 
-            modelBuilder.Entity("IdentityPoc.Data.Entities.Person", b =>
+            modelBuilder.Entity("IdentityPoc.Data.Entities.User", b =>
                 {
-                    b.Navigation("OrganizationMemberships");
-
-                    b.Navigation("User");
+                    b.Navigation("Memberships");
                 });
 #pragma warning restore 612, 618
         }

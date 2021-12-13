@@ -31,7 +31,7 @@ namespace IdentityPoc.Web
 			services.AddLogging();
 			services.AddSwaggerGen();
 
-			services.AddIdentity<PersonUser, IdentityRole<Guid>>()
+			services.AddIdentity<User, IdentityRole<Guid>>()
 				.AddEntityFrameworkStores<DataDbContext>();
 
 			// TODO: Nicer way?

@@ -16,7 +16,6 @@ namespace IdentityPoc.Data.Entities
 
 		public DateTime? Modified { get; set; }
 
-		[Required]
-		public virtual ICollection<OrganizationMembership> OrganizationMemberships { get; set; }
+		public virtual ICollection<OrganizationMembership> Memberships { get; set; }
 	}
 }

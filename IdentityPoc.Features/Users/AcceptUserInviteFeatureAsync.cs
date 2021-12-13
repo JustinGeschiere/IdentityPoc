@@ -4,31 +4,37 @@ using IdentityPoc.Features.Bases;
 using IdentityPoc.Features.Helpers;
 using IdentityPoc.Features.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace IdentityPoc.Features.Users
 {
-	[Obsolete("Replaced with invite flow")]
-	public class CreateUserFeatureAsync : BaseFeatureAsync<CreateUserFeatureAsync.Validator, CreateUserFeatureAsync.Handler, CreateUserFeatureAsync.Command, CreateUserFeatureAsync.Result>
+	public class AcceptUserInviteFeatureAsync : BaseFeatureAsync<AcceptUserInviteFeatureAsync.Validator, AcceptUserInviteFeatureAsync.Handler, AcceptUserInviteFeatureAsync.Command, AcceptUserInviteFeatureAsync.Result>
 	{
-		public CreateUserFeatureAsync(Validator validator, Handler handler)
+		public AcceptUserInviteFeatureAsync(Validator validator, Handler handler)
 			: base(validator, handler)
 		{ }
 
 		public class Command
 		{
-			[Required]
-			public string InviteToken { get; set; }
+			[Required, MaxLength(256)]
+			public string Token { get; set; }
 
-			[Required]
+			[Required, DataType(DataType.Password)]
 			public string Password { get; set; }
 		}
 
 		public class Result
 		{
+			public Result(bool succes)
+			{
+				Success = succes;
+			}
+
 			public bool Success { get; set; }
 		}
 
@@ -58,12 +64,12 @@ namespace IdentityPoc.Features.Users
 
 			public async Task<Result> HandleAsync(Command command)
 			{
-				var invitationId = TokenHelper.TokenToGuid(command.InviteToken);
+				var invitationId = TokenHelper.TokenToGuid(command.Token);
 
 				var invitation = _dataDbContext.UserInvitations.Find(invitationId);
 				if (invitation == null || invitation.Expires <= DateTime.UtcNow)
 				{
-					throw new InvalidOperationException($"No activate invitation found for token '{command.InviteToken}'");
+					throw new InvalidOperationException($"No activate invitation found for token '{command.Token}'");
 				}
 
 				var identityUser = new User()
@@ -74,19 +80,30 @@ namespace IdentityPoc.Features.Users
 				};
 
 				var identityResult = await _userManager.CreateAsync(identityUser, command.Password);
-
-				if (identityResult.Succeeded)
-				{
-					return new Result()
-					{
-						Success = true
-					};
-				}
-				else
+				if (!identityResult.Succeeded)
 				{
 					var exceptions = identityResult.Errors.Select(i => new InvalidOperationException(i.Description));
 					throw new AggregateException(exceptions);
 				}
+
+				// Assign OrganizationMembership to User, if provided
+				if (invitation.OrganizationMembershipId != null)
+				{
+					var membership = await _dataDbContext.OrganizationMemberships
+						.Where(i => i.Id == invitation.OrganizationMembershipId)
+						.Include(i => i.User)
+						.FirstOrDefaultAsync();
+
+					if (membership != null)
+					{
+						var user = await _userManager.FindByEmailAsync(invitation.EmailAddress);
+						membership.User = user;
+
+						await _dataDbContext.SaveChangesAsync();
+					}
+				}
+
+				return new Result(true);
 			}
 		}
 	}
