@@ -1,0 +1,107 @@
+﻿@model IdentityPoc.Web.Models.Account.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Login</h1>
+    <div class="container" style="max-width: 540px;">
+        <form id="login-form" asp-controller="Account" asp-action="Login" method="post">
+
+            <div id="username-panel" class="input-group mb-3">
+                <input id="username-input" type="text" class="form-control" name="Email" placeholder="E-mail address" aria-label="E-mail address" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button disabled id="username-button" class="btn btn-outline-primary" type="button" onclick="enteredUsername()">Next</button>
+                </div>
+            </div>
+
+            <div id="password-panel" class="input-group mb-3">
+                <input id="password-input" type="password" class="form-control" name="Password" placeholder="Password" aria-label="Password" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button disabled id="password-button" class="btn btn-outline-primary" type="button" onclick="enteredPassword()">Login</button>
+                </div>
+            </div>
+
+            <div id="loading-panel">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript" src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+
+    var loginForm = $("#login-form");
+
+    var usernamePanel = $("#username-panel");
+    var passwordPanel = $("#password-panel");
+    var loadingPanel = $("#loading-panel");
+
+    var usernameInput = $("#username-input");
+    var passwordInput = $("#password-input");
+
+    var usernameButton = $("#username-button");
+    var passwordButton = $("#password-button");
+
+    var emailRegex = /^(([^<>()[\]\.,;:\s@("@")\"]+(\.[^<>()[\]\.,;:\s@("@")\"]+)*)|(\".+\"))@("@")(([^<>()[\]\.,;:\s@("@")\"]+\.)+[^<>()[\]\.,;:\s@("@")\"]{2,})$/i;
+
+    assignListeners();
+    resetPanels();
+
+    function assignListeners() {
+        usernameInput.on("input", function() {
+            if (usernameInput.val().match(emailRegex)) {
+                usernameButton.prop("disabled", false);
+            } else {
+                usernameButton.prop("disabled", true);
+            }
+        });
+
+        passwordInput.on("input", function () {
+            if (passwordInput.val().length > 0) {
+                passwordButton.prop("disabled", false);
+            } else {
+                passwordButton.prop("disabled", true);
+            }
+        });
+    }
+
+    function resetPanels() {
+        usernamePanel.show();
+        passwordPanel.hide();
+        loadingPanel.hide();
+
+        usernameInput.val("");
+        passwordInput.val("");
+    }
+
+    function enteredUsername() {
+        usernamePanel.hide();
+        passwordPanel.show();
+    }
+
+    function enteredPassword() {
+        passwordPanel.hide();
+        loadingPanel.show();
+
+        submitForm();
+    }
+
+    function submitForm() {
+        $.post("/api/users/authenticate", loginForm.serialize(), function (response) {
+            if (response.success) {
+                location.replace("someUrl");
+            }
+            else {
+                console.log("failed login attempt");
+                resetPanels();
+            }
+        });
+    }
+
+</script>

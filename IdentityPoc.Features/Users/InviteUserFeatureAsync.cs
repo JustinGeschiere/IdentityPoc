@@ -3,7 +3,6 @@ using IdentityPoc.Data.Entities;
 using IdentityPoc.Features.Bases;
 using IdentityPoc.Features.Helpers;
 using IdentityPoc.Features.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -27,6 +26,7 @@ namespace IdentityPoc.Features.Users
 
 		public class Result
 		{
+			public string Token { get; set; }
 			public string InvitationUrl { get; set; }
 			public DateTime Expires { get; set; }
 		}
@@ -86,6 +86,7 @@ namespace IdentityPoc.Features.Users
 
 				return new Result()
 				{
+					Token = token,
 					InvitationUrl = $"https://localhost:5001/api/users/invitation/{token}",
 					Expires = invitation.Expires
 				};

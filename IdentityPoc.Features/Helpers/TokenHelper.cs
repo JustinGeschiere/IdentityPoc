@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IdentityPoc.Features.Models;
+using System;
 using System.Text;
 
 namespace IdentityPoc.Features.Helpers
@@ -7,14 +8,34 @@ namespace IdentityPoc.Features.Helpers
 	{
 		public static string GuidToToken(Guid id)
 		{
-			var tokenBytes = Encoding.UTF8.GetBytes(id.ToString());
-			return Convert.ToBase64String(tokenBytes);
+			return StringToBase64(id.ToString());
 		}
 
 		public static Guid TokenToGuid(string token)
 		{
-			var tokenBytes = Convert.FromBase64String(token);
-			return Guid.Parse(Encoding.UTF8.GetString(tokenBytes));
+			return Guid.Parse(Base64ToString(token));
+		}
+
+		public static string AuthToToken(AuthModel model)
+		{
+			return StringToBase64(model.ToString());
+		}
+
+		public static AuthModel TokenToAuth(string token)
+		{
+			return new AuthModel(Base64ToString(token));
+		}
+
+		private static string StringToBase64(string obj)
+		{
+			var bytes = Encoding.UTF8.GetBytes(obj);
+			return Convert.ToBase64String(bytes);
+		}
+
+		private static string Base64ToString(string obj)
+		{
+			var bytes = Convert.FromBase64String(obj);
+			return Encoding.UTF8.GetString(bytes);
 		}
 	}
 }

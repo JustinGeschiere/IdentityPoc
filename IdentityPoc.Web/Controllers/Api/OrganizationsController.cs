@@ -14,13 +14,13 @@ namespace IdentityPoc.Web.Controllers.Api
 		[HttpGet("GetPagedOrganizations")]
 		public async Task<IActionResult> GetPagedOrganizationsAsync([FromServices] GetPagedOrganizationsFeatureAsync feature, [FromQuery] GetPagedOrganizationsFeatureAsync.Command command)
 		{
-			return await feature.ResolveAsync(command);
+			return await feature.ResolveJsonAsync(command);
 		}
 
 		[HttpPost("CreateOrganization")]
 		public async Task<IActionResult> CreateOrganizationAsync([FromServices] CreateOrganizationFeatureAsync feature, [FromForm] CreateOrganizationFeatureAsync.Command command)
 		{
-			return await feature.ResolveAsync(command);
+			return await feature.ResolveJsonAsync(command);
 		}
 	}
 }

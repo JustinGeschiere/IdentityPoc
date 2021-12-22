@@ -28,6 +28,7 @@ namespace IdentityPoc.Features.Users
 
 		public class Result
 		{
+			// TODO: Models project?
 			public class UserModel
 			{
 				public string Email { get; set; }
