@@ -7,7 +7,11 @@
 <div class="text-center">
     <h1 class="display-4">Login</h1>
     <div class="container" style="max-width: 540px;">
-        <form id="login-form" asp-controller="Account" asp-action="Login" method="post">
+        <form id="login-form" asp-antiforgery="false">
+
+            <div id="warning-panel" class="alert alert-danger" >
+                <span id="warning-message">Something went wrong, please try again</span>
+            </div>
 
             <div id="username-panel" class="input-group mb-3">
                 <input id="username-input" type="text" class="form-control" name="Email" placeholder="E-mail address" aria-label="E-mail address" aria-describedby="basic-addon2">
@@ -38,10 +42,12 @@
 
     var loginForm = $("#login-form");
 
+    var warningPanel = $("#warning-panel");
     var usernamePanel = $("#username-panel");
     var passwordPanel = $("#password-panel");
     var loadingPanel = $("#loading-panel");
 
+    var warningMessage = $("#warning-message");
     var usernameInput = $("#username-input");
     var passwordInput = $("#password-input");
 
@@ -49,6 +55,7 @@
     var passwordButton = $("#password-button");
 
     var emailRegex = /^(([^<>()[\]\.,;:\s@("@")\"]+(\.[^<>()[\]\.,;:\s@("@")\"]+)*)|(\".+\"))@("@")(([^<>()[\]\.,;:\s@("@")\"]+\.)+[^<>()[\]\.,;:\s@("@")\"]{2,})$/i;
+    var defaultMessage = "Something went wrong, please try again."
 
     assignListeners();
     resetPanels();
@@ -62,6 +69,12 @@
             }
         });
 
+        usernameInput.on("keypress", function (e) {
+            if (e.which === 13 && !usernameButton.prop("disabled")) {
+                usernameButton.click();
+            }
+        })
+
         passwordInput.on("input", function () {
             if (passwordInput.val().length > 0) {
                 passwordButton.prop("disabled", false);
@@ -69,37 +82,64 @@
                 passwordButton.prop("disabled", true);
             }
         });
+
+        passwordInput.on("keypress", function (e) {
+            if (e.which === 13 && !passwordButton.prop("disabled")) {
+                passwordButton.click();
+            }
+        })
     }
 
     function resetPanels() {
+        warningPanel.hide();
         usernamePanel.show();
         passwordPanel.hide();
         loadingPanel.hide();
 
         usernameInput.val("");
         passwordInput.val("");
+
+        usernameButton.prop("disabled", true);
+        passwordButton.prop("disabled", true);
+
+        usernameInput.focus();
     }
 
     function enteredUsername() {
+        warningPanel.hide();
         usernamePanel.hide();
         passwordPanel.show();
+
+        passwordInput.focus();
     }
 
     function enteredPassword() {
+        warningPanel.hide();
         passwordPanel.hide();
         loadingPanel.show();
 
         submitForm();
     }
 
+    function displayWarning(message) {
+        if (message) {
+            warningMessage.text(message);
+        }
+        else {
+            warningMessage.text(defaultMessage);
+        }
+
+        warningPanel.show();
+    }
+
     function submitForm() {
         $.post("/api/users/authenticate", loginForm.serialize(), function (response) {
             if (response.success) {
-                location.replace("someUrl");
+                location.replace("@Model.ReturnUrl");
             }
             else {
-                console.log("failed login attempt");
                 resetPanels();
+                displayWarning(null);
             }
         });
     }

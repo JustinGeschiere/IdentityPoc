@@ -1,10 +1,7 @@
-﻿using IdentityPoc.Data;
-using IdentityPoc.Data.Entities;
+﻿using IdentityPoc.Data.Entities;
 using IdentityPoc.Features.Bases;
 using IdentityPoc.Features.Helpers;
 using IdentityPoc.Features.Interfaces;
-using IdentityPoc.Features.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -31,8 +28,6 @@ namespace IdentityPoc.Features.Users
 		public class Result
 		{
 			public bool Success { get; set; }
-
-			public string Token { get; set; }
 		}
 
 		public class Validator : IValidator<Command>
@@ -51,35 +46,18 @@ namespace IdentityPoc.Features.Users
 		public class Handler : IHandlerAsync<Command, Result>
 		{
 			private readonly SignInManager<User> _signInManager;
-			private readonly UserManager<User> _userManager;
 
-			private readonly IHttpContextAccessor _httpContextAccessor;
-
-			public Handler(SignInManager<User> signInManager, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
+			public Handler(SignInManager<User> signInManager)
 			{
 				_signInManager = signInManager;
-				_userManager = userManager;
-				_httpContextAccessor = httpContextAccessor;
 			}
 
 			public async Task<Result> HandleAsync(Command command)
 			{
 				var signInResult = await _signInManager.PasswordSignInAsync(command.Email, command.Password, true, false);
 
-				var token = string.Empty;
-
-				if (signInResult.Succeeded)
-				{
-					var user = await _userManager.FindByNameAsync(command.Email);
-					var authModel = new AuthModel(user.Id, DateTime.UtcNow.AddMinutes(20));
-					token = TokenHelper.AuthToToken(authModel);
-
-					_httpContextAccessor.HttpContext.Response.Cookies.Append("identity_poc_auth", token);
-				}
-
 				return new Result()
 				{
-					Token = token,
 					Success = signInResult.Succeeded
 				};
 			}

@@ -16,16 +16,6 @@ namespace IdentityPoc.Features.Helpers
 			return Guid.Parse(Base64ToString(token));
 		}
 
-		public static string AuthToToken(AuthModel model)
-		{
-			return StringToBase64(model.ToString());
-		}
-
-		public static AuthModel TokenToAuth(string token)
-		{
-			return new AuthModel(Base64ToString(token));
-		}
-
 		private static string StringToBase64(string obj)
 		{
 			var bytes = Encoding.UTF8.GetBytes(obj);
